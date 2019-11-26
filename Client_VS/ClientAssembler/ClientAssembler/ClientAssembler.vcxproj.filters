@@ -18,5 +18,18 @@
     <ClCompile Include="ClientAssembler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Display.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Display.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Utility.asm">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

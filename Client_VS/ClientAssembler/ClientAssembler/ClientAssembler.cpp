@@ -3,8 +3,6 @@
 //References:
 //C++ Networking - https://docs.microsoft.com/en-us/windows/win32/winsock/getting-started-with-winsock
 //Main return values - https://stackoverflow.com/questions/204476/what-should-main-return-in-c-and-c
-//Polling keystates (windows) - https://www.youtube.com/watch?v=VuhE8wuYKEE
-//Storing size of message in header - https://stackoverflow.com/questions/35732112/c-tcp-recv-unknown-buffer-size
 
 
 //Libraries needed for both client and server
@@ -17,13 +15,6 @@
 //Libraries used for debug of server
 #include <iostream>
 #include <string>
-
-//[FUNCTION PROTOTYPES]
-void ShowGameMessage(std::string msg, int type);
-void ProccessServerMessage(char msgBuffer[512]);
-void CheckQuitKey();
-
-bool closeGame = false;
 
 int main() 
 {
@@ -120,17 +111,17 @@ int main()
 	std::cout << "Success - client connected to server!" << std::endl;
 
 	//[ENTER GAME LOOP]
-	const char* sendbuf = "WHAT IS MY ID???";
 
 	#define DEFAULT_BUFLEN 512
 	int recvbuflen = DEFAULT_BUFLEN;
 
+	const char* sendbuf = "WHAT IS MY ID???";
 	char recvbuf[DEFAULT_BUFLEN];
 
 	int iResult;
 
 	// Send an initial buffer
-	/*iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
+	iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
 	if (iResult == SOCKET_ERROR) {
 		printf("send failed: %d\n", WSAGetLastError());
 		closesocket(ConnectSocket);
@@ -138,7 +129,7 @@ int main()
 		return 1;
 	}
 
-	printf("Bytes Sent: %ld\n", iResult);*/
+	printf("Bytes Sent: %ld\n", iResult);
 
 	// shutdown the connection for sending since no more data will be sent
 	// the client can still use the ConnectSocket for receiving data
@@ -150,123 +141,18 @@ int main()
 		return 1;
 	}
 
-	// Receive data until the server shuts down (todo)
+	// Receive data until the server closes the connection
 	do {
-
-		//Check for incoming messages
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
-		{
-			//printf("Bytes received: %d\n", iResult);
-			ProccessServerMessage(recvbuf);
-		}
+			printf("Bytes received: %d\n", iResult);
 		else if (iResult == 0)
-		{
-			//no bytes recieved
-		}
+			printf("Connection closed\n");
 		else
-		{
-			std::cout << "Recieving message has failed becasue " << WSAGetLastError() << std::endl;
-			break;
-		}
+			printf("recv failed: %d\n", WSAGetLastError());
+	} while (iResult > 0);
 
-		CheckQuitKey();
-	} while (!closeGame);
-
-	std::cout << "Game Shutting down!" << std::endl;
-
-	closesocket(ConnectSocket);
-	WSACleanup();
-
-	std::cout << "Game Finished Exiting Networking!" << std::endl;
+	std::cout << "Final message recieved - " << recvbuf << std::endl;
 
 	return 0;
-}
-
-void ProccessServerMessage(char msgBuffer[512])
-{
-	//MESSAGES FORMAT:
-	//CHAR(5) - message type 
-	//CHAR(4) - message size
-	//VARCHAR(501) -message content
-	//eg. PRINT|0014|Hi!
-
-	//Get the start of message to match to message type
-	//Incoming message list:
-	// - INITP - Initialize the current player (us) (includes id and spawn point)
-	// - PLMOV - A player move update
-	// - PLADD - A new player has joined
-	// - PLSUB - An old player has left
-	// - PLOLD - All previous players (id's and positions)
-	// - PRINT - Print the message array to the console
-
-
-
-	//Get the identifying information of the message (which type)
-	std::string header = "";
-	for (int i = 0; i < 5; i++)
-		header += msgBuffer[i];
-
-	//Get message length
-	std::string lengthStr = "";
-	int msgLength = -1;
-	bool validNumber = true;
-	for (int g = 6; g < 10; g++)
-	{
-		lengthStr += msgBuffer[g];
-		if (!std::isdigit(msgBuffer[g]))
-		{
-			validNumber = false;
-		}
-	}
-	if (!validNumber)
-	{
-		std::cout << "Failed reading invalid sized message!" << std::endl;
-		return;
-	}
-	msgLength = std::stoi(lengthStr);
-
-
-	//Get message content
-	std::string message = "";
-	for (int h = 0; h < msgLength; h++)
-		message += msgBuffer[h];
-	
-	//Check if message is long enough to accept
-	if (msgLength < 11 || msgLength > 512)
-		return;
-
-	//Properly call the correct function
-	if (header == "PRINT")
-	{
-		ShowGameMessage("Server Message Recieved - " + message, 1);
-	}
-	else
-	{
-		ShowGameMessage("Server Message Type Could not accepted - " + header, 3);
-	}
-}
-
-
-//void PerformMove();	//Send from server? or client side?
-//void RedrawGrid();
-//void 
-
-
-//UTILITY
-void ShowGameMessage(std::string msg, int type)
-{
-	//Add colors of messages based on severety 1 - 3
-
-	//TODO: clear Cmd + do in assembler + in red?
-	std::cout << msg << std::endl;
-}
-
-//Returns true if q key has been pressed (to quit server)
-void CheckQuitKey()
-{
-	if (GetAsyncKeyState(0x10) && GetAsyncKeyState(0x51)) //IF Q key down (upper case)
-	{
-		closeGame = true;
-	}
 }

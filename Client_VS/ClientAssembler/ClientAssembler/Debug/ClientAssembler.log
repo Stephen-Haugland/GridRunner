@@ -1,2 +1,3 @@
-﻿  ClientAssembler.cpp
-  ClientAssembler.vcxproj -> C:\Users\Kostiantyn\Desktop\ServerTest\Client_VS\ClientAssembler\Debug\ClientAssembler.exe
+﻿  Display.cpp
+Display.obj : error LNK2019: unresolved external symbol _drawGridPoint referenced in function "public: void __thiscall Display::DrawGrid(void)" (?DrawGrid@Display@@QAEXXZ)
+C:\Users\shaugland21\Desktop\ServerTest\Client_VS\ClientAssembler\Debug\ClientAssembler.exe : fatal error LNK1120: 1 unresolved externals
