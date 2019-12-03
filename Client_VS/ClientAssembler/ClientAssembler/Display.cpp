@@ -21,8 +21,26 @@ void Display::DrawGrid()
 	// Windows console
 	// https://www.dreamincode.net/forums/topic/228811-microsoft-using-console-functions-to-achieve-blinking-text/
 
+	//Clear the console
+
+	int 
+	bool isDrawing = true;
+	while (isDrawing)
+	{
+		//Assembly for next grid point and isDrawing state
+		__asm 
+		{
+
+		}
 
 
+		//C++ goto function
+
+		//C++ set color functions
+
+		//C++ write text
+
+	}
 
 
 	// iterate through entire grid
