@@ -16,35 +16,35 @@
 #include <iostream>
 #include <string>
 
-void Set_Cursor_Position(short CoordX, short CoordY)
-//our function to set the cursor position.
-{
-	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD position = { CoordX,CoordY };
-
-	SetConsoleCursorPosition(hStdout, position);
-}
+#include <conio.h>
+#include <Windows.h>
 
 
 int main() 
 {
+	//https://docs.microsoft.com/en-us/windows/console/console-screen-buffers#_win32_font_attributes
 
-	bool isDrawing = true;
-	while (isDrawing)
-	{
-		//Testing if inline assembler works
-		__asm
-		{
-			mov isDrawing, 0
-		}
-		if (isDrawing)
-		{
-			std::cout << "I'm drawing!" << std::endl;
-		}
-	}
+	//bool isDrawing = true;
+	//while (isDrawing)
+	//{
+	//	//Testing if inline assembler works
+	//	__asm
+	//	{
+	//		mov isDrawing, 0
+	//	}
+	//	if (isDrawing)
+	//	{
+	//		std::cout << "I'm drawing!" << std::endl;
+	//	}
+	//}
+
+
+	//std::textbackground(GREEN);
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, 80);
 	std::cout << "I'm DONE drawing!" << std::endl;
 
-	Set_Cursor_Position(0, 4);
+	//Set_Cursor_Position(0, 4);
 
 
 	//[INITIALIZING WINSOCK]
