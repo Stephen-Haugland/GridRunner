@@ -16,8 +16,36 @@
 #include <iostream>
 #include <string>
 
+void Set_Cursor_Position(short CoordX, short CoordY)
+//our function to set the cursor position.
+{
+	HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD position = { CoordX,CoordY };
+
+	SetConsoleCursorPosition(hStdout, position);
+}
+
+
 int main() 
 {
+
+	bool isDrawing = true;
+	while (isDrawing)
+	{
+		//Testing if inline assembler works
+		__asm
+		{
+			mov isDrawing, 0
+		}
+		if (isDrawing)
+		{
+			std::cout << "I'm drawing!" << std::endl;
+		}
+	}
+	std::cout << "I'm DONE drawing!" << std::endl;
+
+	Set_Cursor_Position(0, 4);
+
 
 	//[INITIALIZING WINSOCK]
 	//Creating the networking data object to use Winsock dlls

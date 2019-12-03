@@ -1,0 +1,6 @@
+﻿  Assembling ASM_Functions.asm...
+ASM_Functions.asm(13): error A2008: syntax error : consoleHandle
+ASM_Functions.asm(18): error A2006: undefined symbol : GetStdHandle
+ASM_Functions.asm(21): error A2006: undefined symbol : WriteConsole
+ASM_Functions.asm(19): error A2006: undefined symbol : consoleHandle
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\BuildCustomizations\masm.targets(70,5): error MSB3721: The command "ml.exe /c /nologo /Zi /Fo"Debug\ASM_Functions.obj" /W3 /errorReport:prompt  /TaASM_Functions.asm" exited with code 1.
