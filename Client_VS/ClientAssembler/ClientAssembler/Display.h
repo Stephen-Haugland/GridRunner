@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include "GridPoint.h"
 
 
 //Libraries needed for both client and server
@@ -14,28 +15,31 @@ class Display {
 
 public:
 	int width, height;
-	std::vector<std::vector<int>> colorGrid;
+	std::vector<std::vector<GridPoint*>> colorGrid;
 
 	//[CONSTRUCTORS]
 	Display(int x, int y);
+
+	//[DESTRUCTOR]
+	~Display();
 
 	//[DRAWING]
 	void DrawGrid();
 
 	//[GRID UPDATE] (TODO: call draw grid after finishing update)
-	void DestroyPlayerCells();	//colors all belongings white, shows game over message
-	void AddPlayerCells();		//converts all of path to be conquered
-	void MovePlayer();			//adds to path (if needed), recolers
+	//void DestroyPlayerCells();	//colors all belongings white, shows game over message
+	//void AddPlayerCells();		//converts all of path to be conquered
+	//void MovePlayer();			//adds to path (if needed), recolers
 
 	//[COMPUTE]
-	std::pair<int,int> NextGridPosition(int playerId);
-	void MovePlayer();	//Simply changes current player location on grid, saves last position?
-	void PerformNext(); //Determines outcome for each player based on their position -> death, conquered cells, move in territory, move and ad
+	//std::pair<int,int> NextGridPosition(int playerId);
+	//void MovePlayer();	//Simply changes current player location on grid, saves last position?
+	//void PerformNext(); //Determines outcome for each player based on their position -> death, conquered cells, move in territory, move and ad
 
 
 	//[UTILITY]
 	void SetCursorPosition(short CoordX, short CoordY);
 	void SetDrawColor(bool r, bool g, bool b, bool isBright);
-
+	void Clear();
 
 };

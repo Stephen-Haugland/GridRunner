@@ -1,28 +1,26 @@
 #include "Display.h"
 
-// http://kipirvine.com/asm/gettingStartedVS2019/index.htm
-
-extern "C" {
-	void drawGridPoint( int , int , int );
-}
-
 Display::Display(int x, int y) {
 	width = x;
 	height = y;
-	for (int i = 0; i < x; i++) {
-		for (int j = 0; j < y; j++) {
-			colorGrid[i].push_back(7);
+	for (int i = 0; i < width; i++)
+	{
+		for (int j = 0; j < height; j++)
+		{
+			colorGrid[i].push_back(new GridPoint(false, false, false, -1));
 		}
 	}
+}
 
-	//TODO:
-	//GridPoint class
-	// - isPath
-	// - isConquered
-	// - isPlayerPos
-	// - colorType (1 - blue (b), 2 - green(g), 3 - light blue (b,g), 4 - red (r), 5 - purple (b,r), 6 - yellow (g,r), 7 - white (r,g,b))
-
-
+Display::~Display()
+{
+	for (int i = 0; i < width; i++) 
+	{
+		for (int j = 0; j < height; j++) 
+		{
+			delete(colorGrid[i][j]);
+		}
+	}
 }
 
 void Display::DrawGrid()
@@ -31,6 +29,7 @@ void Display::DrawGrid()
 	// https://www.dreamincode.net/forums/topic/228811-microsoft-using-console-functions-to-achieve-blinking-text/
 
 	//Clear the console
+	Clear();
 
 	int curX = 0;
 	int curY = 0;
@@ -72,8 +71,11 @@ void Display::DrawGrid()
 		//C++ goto function (x multiplied by two since our grid point is two space charecters
 		SetCursorPosition(curX * 2, curY);
 
-		//C++ set color functions (TODO: get proper color from grid point variable)
-		//SetDrawColor();
+		//C++ set color functions
+		SetDrawColor((*colorGrid[curX][curY]).isRed(),
+					 (*colorGrid[curX][curY]).isGreen(),
+					 (*colorGrid[curX][curY]).isBlue(),
+					 (*colorGrid[curX][curY]).isBright());
 
 		//C++ write text (a singular grid point)
 		std::cout << "  " << std::endl;
@@ -95,28 +97,28 @@ void Display::SetDrawColor(bool r, bool g, bool b, bool isBright)
 	__asm
 	{
 		//check if need to add red to the mix 
-		mov eax, r
+		mov eax, DWORD PTR r
 		cmp eax, 1
 		jne addGreenCalc
 		add finalOption, 64d
 
 		//check if need to add green to the mix 
 		addGreenCalc:
-			mov eax, g
+			mov eax, DWORD PTR g
 			cmp eax, 1
 			jne addBlueCalc
 			add finalOption, 32d
 			
 		//check if need to add blue to the mix 
 		addBlueCalc:
-			mov eax, b
+			mov eax, DWORD PTR b
 			cmp eax, 1
 			jne addIntensityCalc
 			add finalOption, 16d
 
 		//check if need to add intensity to the mix 
 		addIntensityCalc:
-			mov eax, isBright
+			mov eax, DWORD PTR isBright
 			cmp eax, 1
 			jne endOfSelection
 			add finalOption, 128d
@@ -135,4 +137,24 @@ void Display::SetCursorPosition(short CoordX, short CoordY)
 	COORD position = { CoordX,CoordY };
 
 	SetConsoleCursorPosition(hStdout, position);
+}
+
+//Reference: following function is completely from the folloing source
+//https://stackoverflow.com/questions/6486289/how-can-i-clear-console
+void Display::Clear()
+{
+	COORD topLeft = { 0, 0 };
+	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO screen;
+	DWORD written;
+
+	GetConsoleScreenBufferInfo(console, &screen);
+	FillConsoleOutputCharacterA(
+		console, ' ', screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+	);
+	FillConsoleOutputAttribute(
+		console, FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_BLUE,
+		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
+	);
+	SetConsoleCursorPosition(console, topLeft);
 }

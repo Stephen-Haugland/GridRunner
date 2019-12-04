@@ -19,6 +19,16 @@
 #include <conio.h>
 #include <Windows.h>
 
+//FUNCTION PROTOTYPES
+// - Movement Input 
+// - (0 is W (Up), 1 is S (Down), 2 is A (left), 3 is D (Left))
+int lastestDirection = 1;
+bool wPressed = true;
+bool sPressed = true;
+bool aPressed = true;
+bool dPressed = true;
+void PollDirectionInput();
+
 
 int main() 
 {
@@ -169,18 +179,85 @@ int main()
 		return 1;
 	}
 
-	// Receive data until the server closes the connection
+	//Make socket non blocking for proper execution of game loop (even when no messages are being recieved)
+	u_long mode = 1;  // 1 to enable non-blocking socket
+	ioctlsocket(ConnectSocket, FIONBIO, &mode);
+
+	// Receive data until the server closes the connection (the game loop pretty much)
+	bool stayInGame = true;
 	do {
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
+		{
 			printf("Bytes received: %d\n", iResult);
+
+		}
+		else if (iResult == -1 && WSAGetLastError() == WSAEWOULDBLOCK)
+		{
+			//Connection would block (no messages, continue with game loop)
+		}
 		else if (iResult == 0)
+		{
 			printf("Connection closed\n");
+			stayInGame = false;
+		}
 		else
+		{
 			printf("recv failed: %d\n", WSAGetLastError());
-	} while (iResult > 0);
+			stayInGame = false;
+		}
+		PollDirectionInput();
+	} while (stayInGame);
 
 	std::cout << "Final message recieved - " << recvbuf << std::endl;
 
 	return 0;
+}
+
+void PollDirectionInput()
+{
+	// - (0 is W (Up), 1 is S (Down), 2 is A (left), 3 is D (Left))
+	if (GetAsyncKeyState(0x57) && lastestDirection != 0 && !wPressed) //If pressing up (W) and its a new direction
+	{
+		lastestDirection = 0;
+		wPressed = true;
+		std::cout << "current direction - " << lastestDirection << std::endl;
+	}
+	else if (GetAsyncKeyState(0x53) && lastestDirection != 1 && !sPressed) //If pressing down (S) and its a new direction
+	{
+		lastestDirection = 1;
+		sPressed = true;
+		std::cout << "current direction - " << lastestDirection << std::endl;
+
+	}
+	else if (GetAsyncKeyState(0x41) && lastestDirection != 2 && !aPressed) //If pressing left (A) and its a new direction
+	{
+		lastestDirection = 2;
+		aPressed = true;
+		std::cout << "current direction - " << lastestDirection << std::endl;
+	}
+	else if (GetAsyncKeyState(0x44) && lastestDirection != 3 && !dPressed) //If pressing right (D) and its a new direction
+	{
+		lastestDirection = 3;
+		dPressed = true;
+		std::cout << "current direction - " << lastestDirection << std::endl;
+	}
+
+	//Disable keys not pressed
+	if(!GetAsyncKeyState(0x57))
+	{
+		wPressed = false;
+	}
+	if (!GetAsyncKeyState(0x53)) //If pressing down (S) and its a new direction
+	{
+		sPressed = false;
+	}
+	if (!GetAsyncKeyState(0x41)) //If pressing left (A) and its a new direction
+	{
+		aPressed = false;
+	}
+	if (!GetAsyncKeyState(0x44)) //If pressing right (D) and its a new direction
+	{
+		dPressed = false;
+	}
 }
