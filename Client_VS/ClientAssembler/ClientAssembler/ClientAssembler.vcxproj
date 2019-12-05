@@ -154,10 +154,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ClientAssembler.cpp" />
+    <ClCompile Include="ClientPlayer.cpp" />
     <ClCompile Include="Display.cpp" />
     <ClCompile Include="GridPoint.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ClientPlayer.h" />
     <ClInclude Include="Display.h" />
     <ClInclude Include="GridPoint.h" />
   </ItemGroup>
