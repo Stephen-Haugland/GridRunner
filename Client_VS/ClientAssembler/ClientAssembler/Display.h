@@ -15,13 +15,10 @@ class Display {
 
 public:
 	int width, height;
-	std::vector<std::vector<GridPoint*>> colorGrid;
+	std::vector<std::vector<GridPoint>> colorGrid;
 
 	//[CONSTRUCTORS]
 	Display(int x, int y);
-
-	//[DESTRUCTOR]
-	~Display();
 
 	//[DRAWING]
 	void DrawGrid();
@@ -30,6 +27,7 @@ public:
 	//void DestroyPlayerCells();	//colors all belongings white, shows game over message
 	//void AddPlayerCells();		//converts all of path to be conquered
 	//void MovePlayer();			//adds to path (if needed), recolers
+	void SetupNewPlayer(int id, int x, int y);
 
 	//[COMPUTE]
 	//std::pair<int,int> NextGridPosition(int playerId);

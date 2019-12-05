@@ -3,25 +3,23 @@
 Display::Display(int x, int y) {
 	width = x;
 	height = y;
-	for (int i = 0; i < width; i++)
+	colorGrid = std::vector<std::vector<GridPoint>>(height);
+	for (int i = 0; i < height; i++)
 	{
-		for (int j = 0; j < height; j++)
+		for (int j = 0; j < width; j++)
 		{
-			colorGrid[i].push_back(new GridPoint(false, false, false, -1));
+			colorGrid[i].push_back(GridPoint(false, false, false, -1));
 		}
 	}
 }
 
-Display::~Display()
+void Display::SetupNewPlayer(int id, int x, int y)
 {
-	for (int i = 0; i < width; i++) 
-	{
-		for (int j = 0; j < height; j++) 
-		{
-			delete(colorGrid[i][j]);
-		}
-	}
+	colorGrid[y][x].setOwnerId(id);
+	colorGrid[y][x].setIsPlayerPos(true);
+	//TODO actually create a client player object
 }
+
 
 void Display::DrawGrid()
 {
@@ -31,54 +29,65 @@ void Display::DrawGrid()
 	//Clear the console
 	Clear();
 
+	int curWidth = width;
+	int curHeight = height;
 	int curX = 0;
 	int curY = 0;
 	bool isDrawing = true;
 	while (isDrawing)
 	{
-		//Assembly for next grid point and isDrawing state
-		__asm 
-		{
-			// check if at the end of the grid
-				mov eax, width
-				cmp eax, curX
-				jne nextGridPointCalc
-
-				mov eax, height
-				cmp eax, curY
-				jne nextGridPointCalc
-
-				//if at end set to stop drawing
-				mov isDrawing, 0
-
-			//check if at the end of row
-			nextGridPointCalc:
-				mov eax, width
-				cmp eax, curX
-				je endOfRowCalc
-				jmp nextCellCalc
-
-				//set x = 0 and add to increment if at end
-				endOfRowCalc:
-					inc curY
-					mov curX, 0
-
-				//add to x if not at end
-				nextCellCalc:
-					inc curX
-		}
+		
 
 		//C++ goto function (x multiplied by two since our grid point is two space charecters
 		SetCursorPosition(curX * 2, curY);
 
 		//C++ set color functions
-		SetDrawColor((*colorGrid[curX][curY]).isRed(),
-					 (*colorGrid[curX][curY]).isGreen(),
-					 (*colorGrid[curX][curY]).isBlue(),
-					 (*colorGrid[curX][curY]).isBright());
+		SetDrawColor(colorGrid[curY][curX].isRed(),
+					 colorGrid[curY][curX].isGreen(),
+					 colorGrid[curY][curX].isBlue(),
+					 colorGrid[curY][curX].isBright());
 
 		//C++ write text (a singular grid point)
 		std::cout << "  " << std::endl;
+
+		//Assembly for next grid point and isDrawing state
+		__asm
+		{
+			// check if at the end of the grid
+			mov eax, curWidth
+			sub eax, 1
+			cmp eax, curX
+			jne nextGridPointCalc
+
+			mov eax, curHeight
+			sub eax, 1
+			cmp eax, curY
+			jne nextGridPointCalc
+
+			//if at end set to stop drawing
+			mov isDrawing, 0
+
+			//check if at the end of row
+			nextGridPointCalc:
+				mov eax, curWidth
+				sub eax, 1
+				cmp eax, curX
+				je endOfRowCalc
+				jmp nextCellCalc
+
+			//set x = 0 and add to increment if at end
+			endOfRowCalc:
+				inc curY
+				mov curX, 0
+
+			//add to x if not at end
+			nextCellCalc:
+				inc curX
+		}
+
+		//Set color back to dark 
+		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		SetConsoleTextAttribute(hConsole, 7);
 	}
 }
 

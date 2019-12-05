@@ -16,10 +16,16 @@ private:
 	int ownerID;
 
 public:
+
 	GridPoint(bool conquered, bool path, bool playerPos, int ownerID);
 	bool getIsConquered();
 	bool getIsPath();
 	bool getIsPlayerPos();
+
+	void setIsConquered(bool conquered);
+	void setIsPath(bool path);
+	void setIsPlayerPos(bool playerPos);
+	void setOwnerId(int ownerID);
 
 	//Color Determining Functions
 	bool isRed();

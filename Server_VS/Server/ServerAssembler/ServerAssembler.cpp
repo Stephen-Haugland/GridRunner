@@ -42,11 +42,15 @@ bool isConflictingSpawnPoint(int curX, int curY, int curID);
 std::string AllPositionsString(int ignoreID);
 void CheckQuitKey();
 
+//Networking
+#define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
 //Send Functions
 void SendOne(SOCKET socket, std::string messageType, std::string messageContent, char(&sendBuf)[512]);
 void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)[512]);
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512]);
 bool WriteToSendBuffer(std::string messageType, std::string messageContent, char(&sendBuf)[512]);
+//Recieve Functions
+bool ProcessMessage(char(&recvBuf)[512]);
 
 //[GLOBAL STORAGE VARIABLES]
 SOCKET clientSockets[1000];
@@ -59,8 +63,6 @@ bool closeAllThreads = false;
 
 
 int main() {
-
-
 
 	//[CREATING THE NETWORKING OBJECT]
 	WSADATA wsaData;
@@ -242,6 +244,8 @@ void AcceptConnections(SOCKET& listenSocket)
 
 void CloseAllConnections()
 {
+	closeAllThreads = true;
+
 	for (int i = 0; i < curClients; i++)
 	{
 		if (clientSockets[i] != INVALID_SOCKET)
@@ -266,7 +270,6 @@ unsigned __stdcall StartClientThread(void* data)
 	//Get the random number generated seeded for player spawn points
 	srand(time(NULL));
 
-	#define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
 	char recvbuf[DEFAULT_BUFLEN];
 	char sendBuf[DEFAULT_BUFLEN];
 	int iResult, iSendResult;
@@ -289,7 +292,7 @@ unsigned __stdcall StartClientThread(void* data)
 	//Send the spawn point of new player to everyone
 	SendAllExcept("PRINT", (*serverPlayers[id]).GetSetupString(), id, sendBuf);
 	//Send the spawn info to new player (defferent function for different setup)
-	SendOne((*serverPlayers[id]).clientSocket, "PRINT", (*serverPlayers[id]).GetSetupString(), sendBuf);
+	SendOne((*serverPlayers[id]).clientSocket, "SETUP", (*serverPlayers[id]).GetSetupString(), sendBuf);
 	//Send current positions of other players to new player
 	std::string allPositions = AllPositionsString((*serverPlayers[id]).clientID);
 	if(allPositions != "")
@@ -303,15 +306,18 @@ unsigned __stdcall StartClientThread(void* data)
 		if (iResult > 0)
 		{
 			std::cout << "Success - Recieved message from client #" << (*serverPlayers[id]).clientID << std::endl;
-
-
+			std::cout << "Message is - " << recvbuf << std::endl;
+			//ProcessMessage(recvbuf);
 		}
 		else if (iResult == 0)
 		{
-			//no bytes recieved
+			std::cout << "Client disconnected " << std::endl;
+			break;
 		}
 		else
 		{
+			if (closeAllThreads)
+				return 0; //server was shut down already
 			std::cout << "Recieving client #" << (*serverPlayers[id]).clientID << " message has failed becasue " << WSAGetLastError() << std::endl;
 			closesocket((*serverPlayers[id]).clientSocket);
 			clientSockets[(*serverPlayers[id]).clientID] = INVALID_SOCKET;
@@ -451,4 +457,55 @@ bool WriteToSendBuffer(std::string messageType, std::string messageContent, char
 	return true;
 }
 
-//void Send Player Move Direction
+bool ProcessMessage(char(&recvBuf)[512])
+{
+	//MESSAGE FORMAT:
+	//5 CHAR (function type) | 4 DIGIT INT (full msg length) | ... (the rest of the message) ...
+
+	//Get the header info
+	std::string msgType = "";
+	for (int i = 0; i < 5; i++)
+	{
+		msgType += recvBuf[i];
+	}
+
+	//Get the message length info
+	std::string msgLengthStr = "";
+	int msgLength = 0;
+	for (int i = 6; i < 10; i++)
+	{
+		if (isdigit(recvBuf[i]))
+			msgLengthStr += recvBuf[i];
+		else
+			return false;
+	}
+	msgLength = std::stoi(msgLengthStr);
+
+	//Get the full message contents
+	std::string msgContent = "";
+	for (int i = 11; i < msgLength; i++)
+	{
+		msgContent += recvBuf[i];
+	}
+
+	//LIST OF POSSIBLE INCOMING MESSAGES (from clients)
+	// - ACEPT: validates that server has accepted the connectiopn (first message)
+	// - INPUT: new user direction selected
+
+	//Proper Action based on message type
+	if (msgType == "ACEPT")
+	{
+		std::cout << "Client accepted on to the server!" << msgContent << std::endl;
+	}
+	else if (msgType == "INPUT")
+	{
+		std::cout << "Client has changed their direction to - " << msgContent << std::endl;
+	}
+	else
+	{
+		std::cout << "Unknown message recieved - " << msgType << ": " << msgContent << std::endl;
+	}
+
+
+	return true;
+}
