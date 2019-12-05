@@ -152,9 +152,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ServerAssembler.cpp" />
+    <ClCompile Include="ServerCompute.cpp" />
     <ClCompile Include="ServerPlayer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ServerCompute.h" />
     <ClInclude Include="ServerPlayer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
