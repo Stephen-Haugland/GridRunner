@@ -1,7 +1,1 @@
-﻿  ServerAssembler.cpp
-D:\Current_Projects\Assembler_Final\GridRunner\Server_VS\Server\ServerAssembler\ServerAssembler.cpp(271,12): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-D:\Current_Projects\Assembler_Final\GridRunner\Server_VS\Server\ServerAssembler\ServerAssembler.cpp(275,15): warning C4101: 'iSendResult': unreferenced local variable
-  ServerPlayer.cpp
-  Generating Code...
-D:\Current_Projects\Assembler_Final\GridRunner\Server_VS\Server\ServerAssembler\ServerAssembler.cpp(440,23): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
-  ServerAssembler.vcxproj -> D:\Current_Projects\Assembler_Final\GridRunner\Server_VS\Server\Debug\ServerAssembler.exe
+﻿  ServerAssembler.vcxproj -> C:\Users\kmakrasnov21\Desktop\GridRunner\GridRunner\Server_VS\Server\Debug\ServerAssembler.exe
