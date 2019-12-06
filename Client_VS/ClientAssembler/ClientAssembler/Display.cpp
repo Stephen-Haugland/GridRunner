@@ -17,7 +17,6 @@ void Display::SetupNewPlayer(int id, int x, int y)
 {
 	colorGrid[y][x].setOwnerId(id);
 	colorGrid[y][x].setIsPlayerPos(true);
-	//TODO actually create a client player object
 }
 
 
@@ -166,4 +165,53 @@ void Display::Clear()
 		screen.dwSize.X * screen.dwSize.Y, topLeft, &written
 	);
 	SetConsoleCursorPosition(console, topLeft);
+}
+
+void Display::DestroyPlayerCells(int playerId)
+{
+	//LARGE TODO: rewrite in assembly
+	for (int y = 0; y < height; y++)
+	{
+		for (int x = 0; x < width; x++)
+		{
+			if (colorGrid[y][x].getOwnerId() == playerId)
+			{
+				colorGrid[y][x].setIsConquered(false);
+				colorGrid[y][x].setIsPlayerPos(false);
+				colorGrid[y][x].setOwnerId(-1);
+			}
+		}
+	}
+}
+
+//[PLAYER EXISTANCE FUNCTIONS]
+bool Display::PlayerOnline(int id)
+{
+	return players.find(id) != players.end();
+}
+
+void Display::AddPlayer(int playerId, int spawnX, int spawnY)
+{
+	SetupNewPlayer(playerId, spawnX, spawnY);
+	players.insert({playerId, ClientPlayer(playerId, spawnX, spawnY) });
+}
+
+bool Display::RemovePlayer(int playerId)
+{
+	if (!PlayerOnline(playerId))
+	{
+		return false;
+	}
+	else
+	{
+		DestroyPlayerCells(playerId);
+		players.erase(playerId);
+		return true;
+	}
+}
+
+//[ACCESSORS/MUTATORS]
+void Display::SetOurID(int ourId)
+{
+	this->ourId = ourId;
 }

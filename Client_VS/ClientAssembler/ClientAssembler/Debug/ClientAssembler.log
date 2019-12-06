@@ -1,1 +1,9 @@
-﻿  ClientAssembler.vcxproj -> D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe
+﻿  ClientAssembler.cpp
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(167,7): warning C4102: 'std': unreferenced label
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(261,23): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(355,22): warning C4018: '<': signed/unsigned mismatch
+  Display.cpp
+  GridPoint.cpp
+  Generating Code...
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(397,20): warning C4018: '<': signed/unsigned mismatch
+  ClientAssembler.vcxproj -> D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe

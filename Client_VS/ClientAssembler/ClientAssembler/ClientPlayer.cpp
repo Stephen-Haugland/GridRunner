@@ -1,7 +1,8 @@
 #include "ClientPlayer.h"
 
-ClientPlayer::ClientPlayer(int spawnX, int spawnY)
+ClientPlayer::ClientPlayer(int id, int spawnX, int spawnY)
 {
+	this->id = id;
 	curX = spawnX;
 	curY = spawnY;
 }

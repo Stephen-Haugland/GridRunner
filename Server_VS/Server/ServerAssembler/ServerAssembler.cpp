@@ -36,8 +36,6 @@ const int gridSizeY = 30;
 //[PROTOTYPES]
 void AcceptConnections(SOCKET& listenSocket);
 unsigned __stdcall StartClientThread(void* data);
-void CloseAllConnections();
-bool isConflictingSpawnPoint(int curX, int curY, int curID);
 std::string AllPositionsString(int ignoreID);
 void CheckQuitKey();
 
@@ -180,12 +178,13 @@ int main() {
 
 
 	//Wait 5 sec for threads to finish execution
+	closeAllThreads = true;
 	std::cout << "SERVER CLEANING FOR 5 SECONDS!" << std::endl;
 	time_t startCountdown = time(0);
 	while (time(0) - startCountdown < 5) {}
 
 	//Close remaining connections (should't be any)
-	CloseAllConnections();
+	compute.RemoveAllPlayers();
 
 	std::cout << "Success - server is closing down!" << std::endl;
 	closesocket(listenSocket);
@@ -226,12 +225,6 @@ void AcceptConnections(SOCKET& listenSocket)
 	}
 }
 
-void CloseAllConnections()
-{
-	compute.RemoveAllPlayers();
-	closeAllThreads = true;
-}
-
 //Handles induvidual client recieving of messages
 unsigned __stdcall StartClientThread(void* data)
 {
@@ -249,13 +242,13 @@ unsigned __stdcall StartClientThread(void* data)
 
 	//[SEND INTITIAL CLIENT DATA]
 	//Send the spawn point of new player to everyone
-	SendAllExcept("PRINT", compute.players[id].GetSetupString(), id, sendBuf);
+	SendAllExcept("NEWPL", compute.players[id].GetSetupString(), id, sendBuf);
 	//Send the spawn info to new player (defferent function for different setup)
 	SendOne(compute.players[id].clientSocket, "SETUP", compute.players[id].GetSetupString(), sendBuf);
 	//Send current positions of other players to new player
 	std::string allPositions = AllPositionsString(compute.players[id].clientID);
 	if(allPositions != "")
-		SendOne(compute.players[id].clientSocket, "PRINT", allPositions, sendBuf);
+		SendOne(compute.players[id].clientSocket, "OLDPL", allPositions, sendBuf);
 
 
 	//Recieve messages until user shuts of
@@ -268,9 +261,10 @@ unsigned __stdcall StartClientThread(void* data)
 			std::cout << "Message is - " << recvbuf << std::endl;
 			ProcessMessage(recvbuf, id);
 		}
-		else if (iResult == 0)
+		else if (iResult == 0 || (iResult == -1 && WSAGetLastError() == WSAECONNRESET))
 		{
 			std::cout << "Client disconnected " << std::endl;
+			SendAllExcept("DELPL", std::to_string(id) + "|0", id, sendBuf);
 			break;
 		}
 		else
@@ -350,7 +344,7 @@ std::string AllPositionsString(int ignoreID)
 	{
 		if (player->second.clientSocket != INVALID_SOCKET && player->first != ignoreID)
 		{
-			result += player->second.GetSetupString() + "{";
+			result += player->second.GetSetupString() + "|";
 		}
 	}
 	if(result != "")

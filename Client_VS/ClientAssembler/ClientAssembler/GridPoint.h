@@ -21,6 +21,7 @@ public:
 	bool getIsConquered();
 	bool getIsPath();
 	bool getIsPlayerPos();
+	int getOwnerId();
 
 	void setIsConquered(bool conquered);
 	void setIsPath(bool path);

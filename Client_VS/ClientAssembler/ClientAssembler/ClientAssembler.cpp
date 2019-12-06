@@ -43,6 +43,7 @@ void SplitParameters(vector<std::string>& parameters, std::string content);
 
 //Initialize client socket object
 SOCKET ConnectSocket = INVALID_SOCKET;
+bool isDead = false;
 
 //Create a display class that handles all of grid updates
 Display gameGrid(50, 30);
@@ -163,13 +164,14 @@ int main()
 		else if (iResult == 0)
 		{
 			gameGrid.Clear();
-			printf("Connection closed\n");
+			std:cout << "Server has closed the connection! Please open a new client!" << std::endl;
+
 			stayInGame = false;
 		}
 		else
 		{
 			gameGrid.Clear();
-			printf("recv failed: %d\n", WSAGetLastError());
+			std::cout << "recv failed: " << WSAGetLastError() << std::endl;
 			stayInGame = false;
 		}
 		PollDirectionInput();
@@ -178,12 +180,15 @@ int main()
 	// Shutdown the connection for sending since no more data will be sent
 	// the client can still use the ConnectSocket for receiving data
 	iResult = shutdown(ConnectSocket, SD_SEND);
-	if (iResult == SOCKET_ERROR) {
-		printf("shutdown failed: %d\n", WSAGetLastError());
+	if (iResult == SOCKET_ERROR) 
+	{
+		std::cout << "shutdown failed: " << WSAGetLastError();
 	}
 
 	closesocket(ConnectSocket);
 	WSACleanup();
+	Sleep(10000); //Gives users time to read errors and quit messages
+
 	return 0;
 }
 
@@ -315,18 +320,66 @@ bool ProcessMessage(char(&recvBuf)[512])
 	// - PRINT: Server wants us to print a message onto the screen (TODO: clears screen)
 
 	//Proper Action based on message type
+	vector<std::string> params;
+	SplitParameters(params, msgContent);
 	if (msgType == "PRINT")
 	{
 		std::cout << "Server lets you know - " << msgContent << std::endl;
 		return false;
 	}
-	else if (msgType == "SETUP")
+
+	//Do not act upon any game messages from server except for setup if currently dead
+	if (isDead)
 	{
-		//FORMAT: id|x spawn|y spawn
-		vector<std::string> params;
-		SplitParameters(params, msgContent);
-		gameGrid.SetupNewPlayer(std::stoi(params[0]), std::stoi(params[1]), std::stoi(params[2]));
+		return false;
+	}
+
+	if (msgType == "SETUP")
+	{
+		//FORMAT: id|x spawn of us|y spawn of us
+		gameGrid.SetOurID(std::stoi(params[0]));
+		gameGrid.AddPlayer(std::stoi(params[0]), std::stoi(params[1]), std::stoi(params[2]));
 		return true;
+	}
+	else if (msgType == "NEWPL")
+	{
+		//FORMAT: id|x spawn of other|y spawn of other
+		gameGrid.AddPlayer(std::stoi(params[0]), std::stoi(params[1]), std::stoi(params[2]));
+		return true;
+	}
+	else if (msgType == "OLDPL")
+	{
+		//FORMAT: id|x spawn of other #1|y spawn of other #1|x spawn of other #2|y spawn of other #2
+		if (params.size() % 3 == 0)
+		{
+			for (int i = 0; i < params.size(); i += 3)
+			{
+				gameGrid.AddPlayer(std::stoi(params[i]), std::stoi(params[i + 1]), std::stoi(params[i + 2]));
+			}
+			return true;
+		}
+		else
+			return false;
+	}
+	else if(msgType == "DELPL")
+	{
+		//FORMAT: id to delete | restart avaliable
+		int deleteID = std::stoi(params[0]);
+		int restartAvalible = std::stoi(params[1]);
+		if (deleteID == gameGrid.ourId)
+		{
+			isDead = true;
+
+			gameGrid.Clear();
+			std::cout << "Server has kicked you... You must've been a bad potato" << std::endl;
+
+			return false;
+		}
+		else
+		{
+			gameGrid.RemovePlayer(deleteID);
+			return true;
+		}
 	}
 	else
 	{

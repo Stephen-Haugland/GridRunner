@@ -9,7 +9,7 @@ public:
 	int width;
 	int height;
 
-	//The players data structure stores information pertaining to induvidual clients connected to the 
+	//The players data structure stores information pertaining to induvidual clients connected to the server 
 	//Lookup, deletion, insertion is O(log(n)) this is the preffered container if need to stor a low amount of elements 
 	std::map<int, ServerPlayer> players = std::map<int, ServerPlayer>();
 
