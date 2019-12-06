@@ -5,6 +5,7 @@
 class ClientPlayer
 {
 public:
+	//sets have O(log(n)) lookup, and is faster with smaller amounts of elements (which is what we expect the path to be)
 	std::set<std::pair<int,int>> playerPath;
 	int curX;
 	int curY;

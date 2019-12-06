@@ -1,7 +1,1 @@
-﻿  ClientAssembler.cpp
-C:\Users\kmakrasnov21\Desktop\GridRunner\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(256,23): warning C4244:  'initializing': conversion from 'unsigned int' to 'float', possible loss of data
-  Display.cpp
-  GridPoint.cpp
-  Generating Code...
-C:\Users\kmakrasnov21\Desktop\GridRunner\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(344,20): warning C4018:  '<': signed/unsigned mismatch
-  ClientAssembler.vcxproj -> C:\Users\kmakrasnov21\Desktop\GridRunner\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe
+﻿  ClientAssembler.vcxproj -> D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe

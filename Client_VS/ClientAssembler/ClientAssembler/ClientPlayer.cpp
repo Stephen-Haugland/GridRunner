@@ -8,7 +8,7 @@ ClientPlayer::ClientPlayer(int spawnX, int spawnY)
 
 bool ClientPlayer::PathContains(int curX, int curY)
 {
-	//return playerPath.find(std::make_pair(curX, curY))
+	return playerPath.find(std::make_pair(curX, curY)) != playerPath.end();
 }
 
 void ClientPlayer::UpdatePlayerPos(int newX, int newY, bool isPath)

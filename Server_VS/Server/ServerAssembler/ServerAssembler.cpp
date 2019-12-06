@@ -22,8 +22,7 @@
 #include <ctime>
 #include <process.h>
 #include <vector>
-#include "ServerPlayer.h"
-
+#include "ServerCompute.h"
 
 
 
@@ -44,19 +43,17 @@ void CheckQuitKey();
 
 //Networking
 #define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
-//Send Functions
+// - send Functions
 void SendOne(SOCKET socket, std::string messageType, std::string messageContent, char(&sendBuf)[512]);
 void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)[512]);
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512]);
 bool WriteToSendBuffer(std::string messageType, std::string messageContent, char(&sendBuf)[512]);
-//Recieve Functions
-bool ProcessMessage(char(&recvBuf)[512]);
+// - receive Functions
+bool ProcessMessage(char(&recvBuf)[512], int clientID);
 
 //[GLOBAL STORAGE VARIABLES]
-SOCKET clientSockets[1000];
-HANDLE clientThreads[1000];
-ServerPlayer* serverPlayers[1000];
-int curClients = 0;
+ServerCompute compute(50, 30);
+int curClients = 0;	//client counter ensures (all clients have unique ids)
 
 //[THREAD CONTROL VARIABLES]
 bool closeAllThreads = false;
@@ -190,19 +187,7 @@ int main() {
 	//Close remaining connections (should't be any)
 	CloseAllConnections();
 
-	//[MEMORY CLEANUP]
-	//Do more effciently with dynamic datastructures
-	for (int i = 0; i < 1000; i++)
-	{
-		if (serverPlayers[i] != NULL)
-		{
-			delete(serverPlayers[i]);
-		}
-	}
-
-
 	std::cout << "Success - server is closing down!" << std::endl;
-	closeAllThreads = true;
 	closesocket(listenSocket);
 	WSACleanup();
 	std::cout << "Success - server is shut down!" << std::endl;
@@ -224,9 +209,9 @@ void AcceptConnections(SOCKET& listenSocket)
 		if (listeningSocketFD.revents & POLLRDNORM)
 		{
 			// Accept a client socket
-			clientSockets[curClients] = accept(listenSocket, NULL, NULL);
+			compute.AddPlayer(curClients, accept(listenSocket, NULL, NULL));
 			//See results
-			if (clientSockets[curClients] == INVALID_SOCKET)
+			if (compute.players[curClients].clientSocket == INVALID_SOCKET)
 			{
 				std::cout << "Accept connection failed - " << WSAGetLastError() << std::endl;
 			}
@@ -234,8 +219,7 @@ void AcceptConnections(SOCKET& listenSocket)
 			{
 				std::cout << "Success - accepted a connection!" << std::endl;
 				unsigned threadID;
-				serverPlayers[curClients] = new ServerPlayer(curClients, clientSockets[curClients]);
-				clientThreads[curClients] = (HANDLE)_beginthreadex(NULL, 0, &StartClientThread, (void*)curClients, 0, &threadID);
+				compute.players[curClients].clientThread = (HANDLE)_beginthreadex(NULL, 0, &StartClientThread, (void*)curClients, 0, &threadID);
 				curClients++;
 			}
 		}
@@ -244,25 +228,9 @@ void AcceptConnections(SOCKET& listenSocket)
 
 void CloseAllConnections()
 {
+	compute.RemoveAllPlayers();
 	closeAllThreads = true;
-
-	for (int i = 0; i < curClients; i++)
-	{
-		if (clientSockets[i] != INVALID_SOCKET)
-		{
-			//TODO: call shutdown first?
-
-			//Close socket automatically for now
-			int result = closesocket(clientSockets[i]);
-			if (result != 0) //if error occurred while trying to close socket
-				std::cout << "Socket close failed - " << WSAGetLastError() << std::endl;
-			clientSockets[curClients] = INVALID_SOCKET;
-		}
-	}
 }
-
-
-
 
 //Handles induvidual client recieving of messages
 unsigned __stdcall StartClientThread(void* data)
@@ -275,39 +243,30 @@ unsigned __stdcall StartClientThread(void* data)
 	int iResult, iSendResult;
 	int recvbuflen = DEFAULT_BUFLEN;
 
-	//Setup Player Object
+	//Setup player object in compute class
 	int id = (int) data;
-
-	//Set Spawnpoint of Player
-	int curX, curY;
-	do
-	{
-		curX = rand() % gridSizeX;
-		curY = rand() % gridSizeY;
-
-	} while (isConflictingSpawnPoint(curX, curY, (*serverPlayers[id]).clientID));
-	(*serverPlayers[id]).ResetPlayer(curX, curY);
+	compute.SetPlayerSpawnPoint(id);
 
 	//[SEND INTITIAL CLIENT DATA]
 	//Send the spawn point of new player to everyone
-	SendAllExcept("PRINT", (*serverPlayers[id]).GetSetupString(), id, sendBuf);
+	SendAllExcept("PRINT", compute.players[id].GetSetupString(), id, sendBuf);
 	//Send the spawn info to new player (defferent function for different setup)
-	SendOne((*serverPlayers[id]).clientSocket, "SETUP", (*serverPlayers[id]).GetSetupString(), sendBuf);
+	SendOne(compute.players[id].clientSocket, "SETUP", compute.players[id].GetSetupString(), sendBuf);
 	//Send current positions of other players to new player
-	std::string allPositions = AllPositionsString((*serverPlayers[id]).clientID);
+	std::string allPositions = AllPositionsString(compute.players[id].clientID);
 	if(allPositions != "")
-		SendOne((*serverPlayers[id]).clientSocket, "PRINT", allPositions, sendBuf);
+		SendOne(compute.players[id].clientSocket, "PRINT", allPositions, sendBuf);
 
 
 	//Recieve messages until user shuts of
 	do
 	{
-		iResult = recv((*serverPlayers[id]).clientSocket, recvbuf, recvbuflen, 0);
+		iResult = recv(compute.players[id].clientSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
 		{
-			std::cout << "Success - Recieved message from client #" << (*serverPlayers[id]).clientID << std::endl;
+			std::cout << "Success - Recieved message from client #" << compute.players[id].clientID << std::endl;
 			std::cout << "Message is - " << recvbuf << std::endl;
-			//ProcessMessage(recvbuf);
+			ProcessMessage(recvbuf, id);
 		}
 		else if (iResult == 0)
 		{
@@ -318,35 +277,16 @@ unsigned __stdcall StartClientThread(void* data)
 		{
 			if (closeAllThreads)
 				return 0; //server was shut down already
-			std::cout << "Recieving client #" << (*serverPlayers[id]).clientID << " message has failed becasue " << WSAGetLastError() << std::endl;
-			closesocket((*serverPlayers[id]).clientSocket);
-			clientSockets[(*serverPlayers[id]).clientID] = INVALID_SOCKET;
+			std::cout << "Recieving client #" << compute.players[id].clientID << " message has failed becasue " << WSAGetLastError() << std::endl;
 			break;
 		}
 	} while (!closeAllThreads);
 
-	closesocket((*serverPlayers[id]).clientSocket);
-	clientSockets[(*serverPlayers[id]).clientID] = INVALID_SOCKET;
+	compute.RemovePlayer(id);
 	return 0;
 }
 
-//[UTILITY FUNCTIONS]
-//Checks other player possitions to see if current position will be on top of another player
-bool isConflictingSpawnPoint(int curX, int curY, int curID)
-{
-	for (int i = 0; i < curClients; i++)
-	{
-		if (curID != i)	//no need to check the client thats above to spawn
-		{
-			if ((*serverPlayers[i]).curX == curX && (*serverPlayers[i]).curY == curY)
-			{
-				return true; // yes conflict (same space as another player)
-			}
-		}
-	}
 
-	return false; //no conflicts
-}
 
 
 //Make sure to clear end of sendBuf to get rid of other client's data
@@ -377,11 +317,12 @@ void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)
 	if (!WriteToSendBuffer(messageType, messageContent, sendBuf))
 		return;
 
-	for (int i = 0; i < curClients; i++)	//TODO: redo datastructure that holds players for easier sending to all players
+	std::map<int, ServerPlayer>::iterator player;
+	for (player = compute.players.begin(); player != compute.players.end(); player++)
 	{
-		if ((*serverPlayers[i]).clientSocket != INVALID_SOCKET)
+		if (player->second.clientSocket != INVALID_SOCKET)
 		{
-			SendOne((*serverPlayers[i]).clientSocket, "", "", sendBuf);
+			SendOne(player->second.clientSocket, "", "", sendBuf);
 		}
 	}
 }
@@ -391,11 +332,12 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 	if (!WriteToSendBuffer(messageType, messageContent, sendBuf) || ignoreID < 0)
 		return;
 
-	for (int i = 0; i < curClients; i++)	//TODO: redo datastructure that holds players for easier sending to all players and deletion of players (use map)
+	std::map<int, ServerPlayer>::iterator player;
+	for (player = compute.players.begin(); player != compute.players.end(); player++)
 	{
-		if ((*serverPlayers[i]).clientSocket != INVALID_SOCKET && ignoreID != i)
+		if (player->second.clientSocket != INVALID_SOCKET && ignoreID != player->first)
 		{
-			SendOne((*serverPlayers[i]).clientSocket, "", "", sendBuf);
+			SendOne(player->second.clientSocket, "", "", sendBuf);
 		}
 	}
 }
@@ -403,11 +345,12 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 std::string AllPositionsString(int ignoreID)
 {
 	std::string result = "";
-	for (int i = 0; i < curClients; i++)
+	std::map<int, ServerPlayer>::iterator player;
+	for (player = compute.players.begin(); player != compute.players.end(); player++)
 	{
-		if ((*serverPlayers[i]).clientSocket != INVALID_SOCKET && i != ignoreID)
+		if (player->second.clientSocket != INVALID_SOCKET && player->first != ignoreID)
 		{
-			result += (*serverPlayers[i]).GetSetupString() + "{";
+			result += player->second.GetSetupString() + "{";
 		}
 	}
 	if(result != "")
@@ -457,7 +400,7 @@ bool WriteToSendBuffer(std::string messageType, std::string messageContent, char
 	return true;
 }
 
-bool ProcessMessage(char(&recvBuf)[512])
+bool ProcessMessage(char(&recvBuf)[512], int clientID)
 {
 	//MESSAGE FORMAT:
 	//5 CHAR (function type) | 4 DIGIT INT (full msg length) | ... (the rest of the message) ...
@@ -495,15 +438,15 @@ bool ProcessMessage(char(&recvBuf)[512])
 	//Proper Action based on message type
 	if (msgType == "ACEPT")
 	{
-		std::cout << "Client accepted on to the server!" << msgContent << std::endl;
+		std::cout << "Client #" << clientID << "accepted on to the server!" << msgContent << std::endl;
 	}
 	else if (msgType == "INPUT")
 	{
-		std::cout << "Client has changed their direction to - " << msgContent << std::endl;
+		std::cout << "Client #" << clientID <<"has changed their direction to - " << msgContent << std::endl;
 	}
 	else
 	{
-		std::cout << "Unknown message recieved - " << msgType << ": " << msgContent << std::endl;
+		std::cout << "Unknown message recieved - " << msgType << ": " << msgContent << " from " << clientID << std::endl;
 	}
 
 
