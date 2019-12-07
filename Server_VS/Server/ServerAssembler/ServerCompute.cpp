@@ -55,36 +55,42 @@ void ServerCompute::MovePlayers()
 
 }
 
-void ServerCompute::NextGridPosition(int playerDirection, int &curX, int &curY, int gridSizeX, int gridSizeY)
+void ServerCompute::NextGridPosition(int playerDirection, 
+									 int &curX, 
+									 int &curY, 
+									 int gridSizeX,
+									 int gridSizeY)
 {
 
 	int tempX = curX;
 	int tempY = curY;
 	__asm
 	{
-		mov eax, playerDirection 
+		mov eax, playerDirection //stores direction in input register
 
-		cmp eax, 0					//Compares the playerDirection, check if move is up
-		jne notUp					
-		dec tempY					//If user presses W decrement Y (Moves up 1 space)
-		cmp tempY, 0					//Checks if out of range of grid
+		cmp eax, 0			//Compares if player direction is up
+		jne notUp			//Checks next if not up		
+		dec tempY			//If user presses W decrement Y position (Moves up 1 space)
+		cmp tempY, 0			//Checks if out of range of grid
 		jae endOfFunc
-		mov tempX, -1				//If out of range, sets position to (-1,-1) player dies
+		mov tempX, -1		//If out of range, sets position to (-1,-1) (player dies)
 		mov tempY, -1
 		jmp endOfFunc
 
-		notUp:						//Check if player moves down
-			cmp eax, 1
-			jne notDown
-			inc tempY
-			mov ebx, gridSizeY
-			cmp tempY, ebx
+		notUp:				//Check if player moves down
+			cmp eax, 1		//Compares if player direction is down
+			jne notDown		//IF not going down move to next direction
+			inc tempY		//IF going down increment y postion
+			mov ebx, gridSizeY	
+			cmp tempY, ebx	//Check if outside grid
 			jb endOfFunc
-			mov tempX, -1
+			mov tempX, -1	//IF outside declare player dead
 			mov tempY, -1
 			jmp endOfFunc
 		
-		notDown:					//Check if player moves left
+		//... CHECK OTHER DIRECTIONS
+
+		notDown:			//Check if player moves left
 			cmp eax, 2
 			jne notLeft
 			dec tempX
@@ -94,7 +100,7 @@ void ServerCompute::NextGridPosition(int playerDirection, int &curX, int &curY, 
 			mov tempY, -1
 			jmp endOfFunc
 
-		notLeft:					//Check if player moves right
+		notLeft:			//Check if player moves right
 			inc tempX
 			mov ebx, gridSizeX
 			cmp tempX, ebx
