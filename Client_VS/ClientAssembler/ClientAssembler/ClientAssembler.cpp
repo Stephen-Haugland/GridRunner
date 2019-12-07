@@ -268,7 +268,6 @@ bool SendMsg(std::string messageType, std::string messageContent, char(&sendBuf)
 	finalMsgLengthStr += std::to_string((int)finalMsgLength);
 
 	std::string finalMsg = messageType + "|" + finalMsgLengthStr + "|" + messageContent;
-	std::cout << "Message Packet Complete: " << finalMsg << std::endl;
 
 	for (unsigned i = 0; i < finalMsg.length(); i++)
 	{
@@ -334,7 +333,21 @@ bool ProcessMessage(char(&recvBuf)[512])
 		return false;
 	}
 
-	if (msgType == "SETUP")
+	if(msgType == "MOVEP")
+	{
+		if (params.size() % 4 == 0)
+		{
+			for (int i = 0; i < params.size(); i += 4)
+			{
+				gameGrid.MovePlayer(std::stoi(params[i]), std::stoi(params[i+1]), std::stoi(params[i+2]), params[i+3]);
+			}
+		}
+		//else
+			//Output error message not with cout
+
+		return true;
+	}
+	else if (msgType == "SETUP")
 	{
 		//FORMAT: id|x spawn of us|y spawn of us
 		gameGrid.SetOurID(std::stoi(params[0]));

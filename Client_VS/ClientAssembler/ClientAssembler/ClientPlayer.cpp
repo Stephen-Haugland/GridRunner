@@ -1,5 +1,12 @@
 #include "ClientPlayer.h"
 
+ClientPlayer::ClientPlayer()
+{
+	id = -1;
+	curX = -1;
+	curY = -1;
+}
+
 ClientPlayer::ClientPlayer(int id, int spawnX, int spawnY)
 {
 	this->id = id;

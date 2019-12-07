@@ -11,55 +11,81 @@ ServerCompute::ServerCompute(int x, int y)
 
 void ServerCompute::MovePlayers()
 {
+	//Move Player To The Next Grid
+	std::map<int, ServerPlayer>::iterator player;
+	for (player = players.begin(); player != players.end(); player++)
+	{
+		if (player->second.state != 'U')
+		{
+			NextGridPosition(player->second.moveDirection, player->second.curX, player->second.curY, width, height);
+
+			//Declare person dead if outside of grid (-1, -1 returned)
+			if (player->second.curX == -1 || player->second.curY == -1)
+				player->second.state = 'D';
+			else //TODO: make proper move state based on wether current cell is in players captured territory
+				player->second.state = 'M';
+		}
+	}
+
+	//Check Conquer
+
+	//Check Conflict
+	// - check people on paths
+	// - check people in each others positions
 
 }
 
 void ServerCompute::NextGridPosition(int playerDirection, int &curX, int &curY, int gridSizeX, int gridSizeY)
 {
+
+	int tempX = curX;
+	int tempY = curY;
 	__asm
 	{
 		mov eax, playerDirection 
+
 		cmp eax, 0					//Compares the playerDirection, check if move is up
 		jne notUp					
-		dec curY					//If user presses W decrement Y (Moves up 1 space)
-		cmp curY, 0					//Checks if out of range of grid
-		ja notAbove
-		mov curX, -1				//If out of range, sets position to (-1,-1) player dies
-		mov curY, -1
+		dec tempY					//If user presses W decrement Y (Moves up 1 space)
+		cmp tempY, 0					//Checks if out of range of grid
+		jae endOfFunc
+		mov tempX, -1				//If out of range, sets position to (-1,-1) player dies
+		mov tempY, -1
+		jmp endOfFunc
 
-		notAbove:
 		notUp:						//Check if player moves down
 			cmp eax, 1
 			jne notDown
-			dec curY
+			inc tempY
 			mov ebx, gridSizeY
-			cmp curY, ebx
-			jb notBelow
-			mov curX, -1
-			mov curY, -1
+			cmp tempY, ebx
+			jb endOfFunc
+			mov tempX, -1
+			mov tempY, -1
+			jmp endOfFunc
 		
-		notBelow:
 		notDown:					//Check if player moves left
 			cmp eax, 2
 			jne notLeft
-			dec curX
-			cmp curX, 0
-			ja notOutL
-			mov curX, -1
-			mov curY, -1
+			dec tempX
+			cmp tempX, 0
+			jae endOfFunc
+			mov tempX, -1
+			mov tempY, -1
+			jmp endOfFunc
 
-		notOutL:
 		notLeft:					//Check if player moves right
-			inc curX
+			inc tempX
 			mov ebx, gridSizeX
-			cmp curX, ebx
-			jb notOutR
-			mov curX, -1
-			mov curY, -1
+			cmp tempX, ebx
+			jb endOfFunc
+			mov tempX, -1
+			mov tempY, -1
 
-		notOutR:
-	
+		endOfFunc:
 	}
+	curX = tempX;
+	curY = tempY;
 }
 
 bool ServerCompute::CheckPathCompletion()

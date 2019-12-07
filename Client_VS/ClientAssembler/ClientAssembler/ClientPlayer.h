@@ -11,6 +11,7 @@ public:
 	int curX;
 	int curY;
 
+	ClientPlayer();
 	ClientPlayer(int id, int spawnX, int spawnY);
 
 	bool PathContains(int curX, int curY);

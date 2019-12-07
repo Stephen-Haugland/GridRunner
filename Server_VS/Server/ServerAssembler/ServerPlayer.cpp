@@ -31,8 +31,17 @@ void ServerPlayer::DisconnectPlayer()
 
 std::string ServerPlayer::GetSetupString() 
 {
-	std::string result = std::to_string(clientID) + "|" + std::to_string(curX) + '|' + std::to_string(curY);
-	return result;
+	return  std::to_string(clientID) + '|' + std::to_string(curX) + '|' + std::to_string(curY);
+}
+
+std::string ServerPlayer::GetFullPlayerState()
+{
+	std::string finalState = std::to_string(clientID) + '|' + std::to_string(curX) + '|' + std::to_string(curY) + '|' + state + '|';
+
+	if (state == 'D')
+		state = 'U';
+
+	return finalState;
 }
 
 #endif

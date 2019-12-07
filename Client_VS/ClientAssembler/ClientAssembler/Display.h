@@ -31,7 +31,7 @@ public:
 	//[GRID UPDATE] (TODO: call draw grid after finishing update)
 	void DestroyPlayerCells(int playerId);	//colors all belongings white, shows game over message (if current player)
 	//void AddPlayerCells();				//converts all of path to be conquered
-	//void MovePlayer();					//adds to path (if needed), recolers
+	void MovePlayer(int id, int nextX, int nextY, std::string state);		//adds to path (if needed), recolers
 	void SetupNewPlayer(int id, int x, int y);
 
 	//[PLAYER EXISTANCE UPDATES]

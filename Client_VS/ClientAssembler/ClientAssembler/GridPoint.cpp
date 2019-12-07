@@ -22,8 +22,6 @@ void GridPoint::setOwnerId(int ownerID)
 	this->ownerID = ownerID; 
 	if (ownerID == -1)
 		isConquered = false;
-	else
-		isConquered = true;
 }
 
 //Color Determining Functions (TODO: redo in assembler if enough time)

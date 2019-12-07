@@ -26,7 +26,7 @@ void Display::DrawGrid()
 	// https://www.dreamincode.net/forums/topic/228811-microsoft-using-console-functions-to-achieve-blinking-text/
 
 	//Clear the console
-	Clear();
+	//Clear();
 
 	int curWidth = width;
 	int curHeight = height;
@@ -181,6 +181,32 @@ void Display::DestroyPlayerCells(int playerId)
 				colorGrid[y][x].setOwnerId(-1);
 			}
 		}
+	}
+}
+
+void Display::MovePlayer(int id, int nextX, int nextY, std::string state)
+{
+	//Check if state is one charecter long
+	if (state.length() > 1)
+		return; 
+
+	//TODO: add more assembler
+	if (state == "M")
+	{
+		//TODO remove below when implemented territories
+		colorGrid[players[id].curY][players[id].curX].setIsPlayerPos(false);
+		players[id].curY = nextY;
+		players[id].curX = nextX;
+		colorGrid[nextY][nextX].setIsPlayerPos(true);
+		colorGrid[nextY][nextX].setOwnerId(id);
+	}
+	else if (state == "D")
+	{
+		DestroyPlayerCells(id);
+	}
+	else
+	{
+		//undefined state
 	}
 }
 

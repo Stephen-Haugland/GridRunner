@@ -20,6 +20,7 @@
 //Libraries used for debug of server
 #include <iostream>
 #include <ctime>
+#include <chrono>
 #include <process.h>
 #include <vector>
 #include "ServerCompute.h"
@@ -43,8 +44,9 @@ void CheckQuitKey();
 #define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
 // - send Functions
 void SendOne(SOCKET socket, std::string messageType, std::string messageContent, char(&sendBuf)[512]);
-void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)[512]);
+void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)[512]);
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512]);
+void SendPlayerStates(char(&sendBuf)[512]);
 bool WriteToSendBuffer(std::string messageType, std::string messageContent, char(&sendBuf)[512]);
 // - receive Functions
 bool ProcessMessage(char(&recvBuf)[512], int clientID);
@@ -52,6 +54,7 @@ bool ProcessMessage(char(&recvBuf)[512], int clientID);
 //[GLOBAL STORAGE VARIABLES]
 ServerCompute compute(50, 30);
 int curClients = 0;	//client counter ensures (all clients have unique ids)
+char sendBufS[DEFAULT_BUFLEN];
 
 //[THREAD CONTROL VARIABLES]
 bool closeAllThreads = false;
@@ -170,10 +173,21 @@ int main() {
 	//[CONTINUOUSLY ACCEPT INCOMING CONNECTIONS]
 	//A loop constantly checks for any clients that want to join and creates a seperate thread for each to be proccessed
 	//This continues until user presses Q on the key board
+	//Movement timing reference: https://stackoverflow.com/questions/2808398/easily-measure-elapsed-time
+	std::chrono::steady_clock::time_point lastMoveUpdateS = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point lastMoveUpdateE;
+
 	while (!closeAllThreads)
 	{
 		CheckQuitKey();
 		AcceptConnections(listenSocket);
+		lastMoveUpdateE = std::chrono::steady_clock::now();
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(lastMoveUpdateE - lastMoveUpdateS).count() > 200)
+		{
+			compute.MovePlayers();
+			lastMoveUpdateS = std::chrono::steady_clock::now();
+			SendPlayerStates(sendBufS);
+		}
 	}
 
 
@@ -305,7 +319,7 @@ void SendOne(SOCKET socket, std::string messageType, std::string messageContent,
 	std::cout << "Success - Sent message: " << messageType << " - " << messageContent << std::endl;
 }
 
-void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)[512])
+void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)[512])
 {
 
 	if (!WriteToSendBuffer(messageType, messageContent, sendBuf))
@@ -316,7 +330,7 @@ void SendAll(std::string messageContent, std::string messageType, char(&sendBuf)
 	{
 		if (player->second.clientSocket != INVALID_SOCKET)
 		{
-			SendOne(player->second.clientSocket, "", "", sendBuf);
+			SendOne(player->second.clientSocket, messageType, messageContent, sendBuf);
 		}
 	}
 }
@@ -334,6 +348,27 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 			SendOne(player->second.clientSocket, "", "", sendBuf);
 		}
 	}
+}
+
+void SendPlayerStates(char(&sendBuf)[512])
+{
+	std::string finalStates = "";
+	std::map<int, ServerPlayer>::iterator player;
+	for (player = compute.players.begin(); player != compute.players.end(); player++)
+	{
+		if (player->second.state != 'U')
+		{
+			finalStates += player->second.GetFullPlayerState();
+		}
+	}
+
+	if (finalStates != "")
+	{
+		finalStates.pop_back();
+		SendAll("MOVEP", finalStates, sendBuf);
+	}
+
+	//LARGE TODO: HANDLE MESSAGES larger than limit of 512 charecters
 }
 
 std::string AllPositionsString(int ignoreID)
@@ -384,7 +419,6 @@ bool WriteToSendBuffer(std::string messageType, std::string messageContent, char
 	finalMsgLengthStr += std::to_string((int)finalMsgLength);
 
 	std::string finalMsg = messageType + "|" + finalMsgLengthStr + "|" + messageContent;
-	std::cout << "Message Packet Complete: " << finalMsg << std::endl;
 
 	for (unsigned i = 0; i < finalMsg.length(); i++)
 	{
@@ -437,6 +471,7 @@ bool ProcessMessage(char(&recvBuf)[512], int clientID)
 	else if (msgType == "INPUT")
 	{
 		std::cout << "Client #" << clientID <<"has changed their direction to - " << msgContent << std::endl;
+		compute.players[clientID].moveDirection = std::stoi(msgContent);
 	}
 	else
 	{
