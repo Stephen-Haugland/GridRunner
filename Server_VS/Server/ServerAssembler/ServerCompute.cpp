@@ -36,10 +36,17 @@ void ServerCompute::MovePlayers()
 		std::map<int, ServerPlayer>::iterator player2;
 		for (player2 = players.begin(); player2 != players.end(); player2++)
 		{
-			if(player1->second.curX == player2->second.curX && player1->second.curY == player2->second.curY)
+
+			if(player1->second.curX != -1 && player2->second.curX != -1 && 
+			   player1->second.clientID != player2->second.clientID && 
+			   player1->second.curX == player2->second.curX && player1->second.curY == player2->second.curY)
 			{
 				player1->second.state = 'D';
 				player2->second.state = 'D';
+				player1->second.curX = -1;
+				player2->second.curX = -1;
+				player1->second.curY = -1;
+				player2->second.curY = -1;
 			}
 		}
 	}

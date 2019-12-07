@@ -3,5 +3,7 @@ C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssemble
 C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(261,23): warning C4244:  'initializing': conversion from 'unsigned int' to 'float', possible loss of data
 C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(340,22): warning C4018:  '<': signed/unsigned mismatch
 C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(368,22): warning C4018:  '<': signed/unsigned mismatch
+  Display.cpp
+  Generating Code...
 C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(410,20): warning C4018:  '<': signed/unsigned mismatch
   ClientAssembler.vcxproj -> C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe
