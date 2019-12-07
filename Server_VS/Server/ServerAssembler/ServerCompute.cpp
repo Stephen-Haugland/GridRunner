@@ -30,6 +30,19 @@ void ServerCompute::MovePlayers()
 	//Check Conquer
 
 	//Check Conflict
+	std::map<int, ServerPlayer>::iterator player1;
+	for (player1 = players.begin(); player != players.end(); player++)
+	{
+		std::map<int, ServerPlayer>::iterator player2;
+		for (player2 = players.begin(); player != players.end(); player++)
+		{
+			if(player1->second.curX == player2->second.curX && player1->second.curY == player2->second.curY)
+			{
+				player1->second.state = 'D';
+				player2->second.state = 'D';
+			}
+		}
+	}
 	// - check people on paths
 	// - check people in each others positions
 
