@@ -90,6 +90,12 @@ void Display::DrawGrid()
 	}
 }
 
+void Display::DrawPoint(int curX, int curY)
+{
+
+
+}
+
 //[UTILITY DRAWING FUNCTIONS C++]
 void Display::SetDrawColor(bool r, bool g, bool b, bool isBright)
 {

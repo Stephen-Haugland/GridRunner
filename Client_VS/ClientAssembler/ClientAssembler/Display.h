@@ -27,6 +27,7 @@ public:
 	 
 	//[DRAWING]
 	void DrawGrid();
+	void DrawPoint(int curX, int curY);
 
 	//[GRID UPDATE] (TODO: call draw grid after finishing update)
 	void DestroyPlayerCells(int playerId);	//colors all belongings white, shows game over message (if current player)

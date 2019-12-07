@@ -31,10 +31,10 @@ void ServerCompute::MovePlayers()
 
 	//Check Conflict
 	std::map<int, ServerPlayer>::iterator player1;
-	for (player1 = players.begin(); player != players.end(); player++)
+	for (player1 = players.begin(); player1 != players.end(); player1++)
 	{
 		std::map<int, ServerPlayer>::iterator player2;
-		for (player2 = players.begin(); player != players.end(); player++)
+		for (player2 = players.begin(); player2 != players.end(); player2++)
 		{
 			if(player1->second.curX == player2->second.curX && player1->second.curY == player2->second.curY)
 			{
