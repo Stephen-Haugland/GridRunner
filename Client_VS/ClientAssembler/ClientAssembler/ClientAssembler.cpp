@@ -46,7 +46,7 @@ SOCKET ConnectSocket = INVALID_SOCKET;
 bool isDead = false;
 
 //Create a display class that handles all of grid updates
-Display gameGrid(100, 60);
+Display gameGrid(50, 30);
 
 int main() 
 {

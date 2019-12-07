@@ -29,8 +29,8 @@
 
 //[GLOBAL CONSTANTS]
 //Game Settings
-const int gridSizeX = 100;
-const int gridSizeY = 60;
+const int gridSizeX = 50;
+const int gridSizeY = 30;
 
 
 
@@ -52,7 +52,7 @@ bool WriteToSendBuffer(std::string messageType, std::string messageContent, char
 bool ProcessMessage(char(&recvBuf)[512], int clientID);
 
 //[GLOBAL STORAGE VARIABLES]
-ServerCompute compute(100, 60);
+ServerCompute compute(50, 30);
 int curClients = 0;	//client counter ensures (all clients have unique ids)
 char sendBufS[DEFAULT_BUFLEN];
 
