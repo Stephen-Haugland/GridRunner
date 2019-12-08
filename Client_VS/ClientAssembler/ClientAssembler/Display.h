@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <map>
+#include <queue>
 #include <iostream>
 #include "GridPoint.h"
 #include "ClientPlayer.h"
@@ -21,6 +22,7 @@ public:
 	std::vector<std::vector<GridPoint>> colorGrid;
 	//Lookup, deletion, insertion is O(log(n)) this is the preffered container if need to stor a low amount of elements 
 	std::map<int, ClientPlayer> players = std::map<int, ClientPlayer>();
+	std::queue<std::pair<int, int>> needUpdates = std::queue<std::pair<int, int>>();
 
 	//[CONSTRUCTORS]
 	Display(int x, int y);
@@ -32,7 +34,7 @@ public:
 	//[GRID UPDATE] (TODO: call draw grid after finishing update)
 	void DestroyPlayerCells(int playerId);	//colors all belongings white, shows game over message (if current player)
 	//void AddPlayerCells();				//converts all of path to be conquered
-	void MovePlayer(int id, int nextX, int nextY, std::string state);		//adds to path (if needed), recolers
+	bool MovePlayer(int id, int nextX, int nextY, std::string state);		//adds to path (if needed), recolers
 	void SetupNewPlayer(int id, int x, int y);
 
 	//[PLAYER EXISTANCE UPDATES]
@@ -44,8 +46,9 @@ public:
 	void SetCursorPosition(short CoordX, short CoordY);
 	void SetDrawColor(bool r, bool g, bool b, bool isBright);
 	void Clear();
+	void ClearUpdateQueue();
 
 	//[ACCESSORS/MUTATORS]
-	void Display::SetOurID(int ourId);
+	void SetOurID(int ourId);
 
 };

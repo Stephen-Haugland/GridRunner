@@ -1,4 +1,6 @@
-//References:
+//Description: The server side of the assembler game (only one computer runs this program)
+
+//References (used in parts of project):
 //C++ Networking (about half of the code) - https://docs.microsoft.com/en-us/windows/win32/winsock/getting-started-with-winsock
 //Main return values meanings - https://stackoverflow.com/questions/204476/what-should-main-return-in-c-and-c
 //How to accept multiple connections (threading) - https://stackoverflow.com/questions/15185380/tcp-winsock-accept-multiple-connections-clients/15185627
@@ -26,22 +28,17 @@
 #include "ServerCompute.h"
 
 
-
 //[GLOBAL CONSTANTS]
 //Game Settings
-const int gridSizeX = 50;
-const int gridSizeY = 30;
+#define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
 
-
-
-//[PROTOTYPES]
+//[PROTOTYPE FUNCTIONS]
+//Networking
+// - setup
 void AcceptConnections(SOCKET& listenSocket);
 unsigned __stdcall StartClientThread(void* data);
 std::string AllPositionsString(int ignoreID);
 void CheckQuitKey();
-
-//Networking
-#define DEFAULT_BUFLEN 512	//messages limited to 512 charecters (can make it to be more)
 // - send Functions
 void SendOne(SOCKET socket, std::string messageType, std::string messageContent, char(&sendBuf)[512]);
 void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)[512]);
@@ -52,13 +49,12 @@ bool WriteToSendBuffer(std::string messageType, std::string messageContent, char
 bool ProcessMessage(char(&recvBuf)[512], int clientID);
 
 //[GLOBAL STORAGE VARIABLES]
-ServerCompute compute(50, 30);
-int curClients = 0;	//client counter ensures (all clients have unique ids)
+ServerCompute compute(100, 60);
+int curClients = 0;	//client counter (ensures all clients have unique ids)
 char sendBufS[DEFAULT_BUFLEN];
 
 //[THREAD CONTROL VARIABLES]
 bool closeAllThreads = false;
-
 
 int main() {
 
@@ -131,7 +127,6 @@ int main() {
 
 	std::cout << "Success - initialized the socket object!" << std::endl;
 
-
 	//[MARK SOCKET FOR REUSE]
 	int reuse = 1;
 	if (setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse)) < 0)
@@ -182,7 +177,7 @@ int main() {
 		CheckQuitKey();
 		AcceptConnections(listenSocket);
 		lastMoveUpdateE = std::chrono::steady_clock::now();
-		if (std::chrono::duration_cast<std::chrono::milliseconds>(lastMoveUpdateE - lastMoveUpdateS).count() > 200)
+		if (std::chrono::duration_cast<std::chrono::milliseconds>(lastMoveUpdateE - lastMoveUpdateS).count() > 250)
 		{
 			compute.MovePlayers();
 			lastMoveUpdateS = std::chrono::steady_clock::now();
@@ -316,7 +311,6 @@ void SendOne(SOCKET socket, std::string messageType, std::string messageContent,
 		socket = INVALID_SOCKET;
 		return;
 	}
-	std::cout << "Success - Sent message: " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)[512])
@@ -333,6 +327,8 @@ void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)
 			SendOne(player->second.clientSocket, messageType, messageContent, sendBuf);
 		}
 	}
+
+	std::cout << "Success - Sent message top all: " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512])
@@ -348,6 +344,8 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 			SendOne(player->second.clientSocket, "", "", sendBuf);
 		}
 	}
+
+	std::cout << "Success - Sent message to all but " << std::to_string(ignoreID) << ": " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendPlayerStates(char(&sendBuf)[512])

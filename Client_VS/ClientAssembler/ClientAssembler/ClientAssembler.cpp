@@ -1,29 +1,34 @@
 //Description: The client side of the assembler game (each user player this program)
 
-//References:
-//C++ Networking - https://docs.microsoft.com/en-us/windows/win32/winsock/getting-started-with-winsock
-//Main return values - https://stackoverflow.com/questions/204476/what-should-main-return-in-c-and-c
-
+//References (used in parts of project):
+//C++ Networking (about half of the code) - https://docs.microsoft.com/en-us/windows/win32/winsock/getting-started-with-winsock
+//Main return values meanings - https://stackoverflow.com/questions/204476/what-should-main-return-in-c-and-c
+//How to accept multiple connections (threading) - https://stackoverflow.com/questions/15185380/tcp-winsock-accept-multiple-connections-clients/15185627
+//Non blocking accept example - https://github.com/pauldotknopf/WindowsSDK7-Samples/tree/3f2438b15c59fdc104c13e2cf6cf46c1b16cf281/netds/winsock/accept
+//WSADPOLL example - https://www.youtube.com/watch?v=--DXAedVWks
+//Show Server IP - https://github.com/angrave/SystemProgramming/wiki/Networking,-Part-2:-Using-getaddrinfo
+//Thread access to data - https://stackoverflow.com/questions/6171350/how-to-pass-data-to-running-thread
+//Polling keystates (windows) - https://www.youtube.com/watch?v=VuhE8wuYKEE
+//Storing size of message in header - https://stackoverflow.com/questions/35732112/c-tcp-recv-unknown-buffer-size
 
 //Libraries needed for both client and server
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
-
 #pragma comment(lib, "Ws2_32.lib")
 
 //Libraries used for debug of server
 #include <iostream>
 #include <string>
-
 #include <conio.h>
 #include <Windows.h>
 
-//Our own classes
-#include "Display.h"
+#include "Display.h" //Stores functions thjat alter game grid
 
 
-//FUNCTION PROTOTYPES
+
+
+//[FUNCTION PROTOTYPES]
 // - Movement Input 
 // - (0 is W (Up), 1 is S (Down), 2 is A (left), 3 is D (Left))
 int lastestDirection = 1;
@@ -46,7 +51,7 @@ SOCKET ConnectSocket = INVALID_SOCKET;
 bool isDead = false;
 
 //Create a display class that handles all of grid updates
-Display gameGrid(50, 30);
+Display gameGrid(100, 60);
 
 int main() 
 {
@@ -85,6 +90,14 @@ int main()
 	std::cin.ignore(10000, '\n');
 	PCSTR serverIp = serverIPinput.c_str();
 
+	//Ask for player initials
+	//std::cout << "Please enter your initials (only 2 first characters will be sent to server): ";
+	//std::string playerInitialsInput = "";
+	//std::cin >> playerInitialsInput;
+	//std::cin.clear();
+	//std::cin.ignore(10000, '\n');
+	//if(playerInitialsInput.length() )
+
 	#define DEFAULT_PORT "27015"
 	// Resolve the server address and port
 	int addressResult = getaddrinfo(serverIp, DEFAULT_PORT, &hints, &result);
@@ -121,11 +134,7 @@ int main()
 		ConnectSocket = INVALID_SOCKET;
 	}
 
-	//TODO: IMPLEMENT BELOW
-	// Should really try the next address returned by getaddrinfo
-	// if the connect call failed
-	// But for this simple example we just free the resources
-	// returned by getaddrinfo and print an error message
+	//TODO: Should really try the next address returned by getaddrinfo
 	freeaddrinfo(result);
 
 	if (ConnectSocket == INVALID_SOCKET) 
@@ -153,7 +162,7 @@ int main()
 		iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
 		if (iResult > 0)
 		{
-			//Redraw grid only when apropriate messages were propccessed
+			//Redraw grid only when apropriate messages were propccessed (only when ProcessMessage returns true)
 			if (ProcessMessage(recvbuf))
 				gameGrid.DrawGrid();
 		}
@@ -177,8 +186,7 @@ int main()
 		PollDirectionInput();
 	} while (stayInGame);
 
-	// Shutdown the connection for sending since no more data will be sent
-	// the client can still use the ConnectSocket for receiving data
+	//Shutdown client connection socket (no more messages will be sent)
 	iResult = shutdown(ConnectSocket, SD_SEND);
 	if (iResult == SOCKET_ERROR) 
 	{
@@ -236,20 +244,17 @@ void PollDirectionInput()
 	}
 }
 
-//[Server Message Functions]
+//[SERVERE MESSAGE FUNCTIONS]
+//ChangePlayerDirection: Sends message about new;y selected direction imediatly
 void ChangePlayerDirection(int newDirection)
 {
-	//UI Updates?
-
 	//Send new direction to server
 	lastestDirection = newDirection;
 	SendMsg("INPUT", std::to_string(newDirection), sendBuf);
 }
 
-
-//Sends a message to server
+//SendMsg: Sends a message to server
 //TRUE if completed succesfully, FALSE if failed
-
 bool SendMsg(std::string messageType, std::string messageContent, char(&sendBuf)[512])
 {
 	//Check basic contraints
@@ -287,7 +292,7 @@ bool SendMsg(std::string messageType, std::string messageContent, char(&sendBuf)
 bool ProcessMessage(char(&recvBuf)[512])
 {
 	//MESSAGE FORMAT:
-	//5 CHAR (function type) | 4 DIGIT INT (full msg length) | ... (the rest of the message) ...
+	//5 CHAR (function type) | 4 DIGIT INT (full character count) | ... (the rest of the message) ...
 
 	//Get the header info
 	std::string msgType = "";
@@ -339,13 +344,20 @@ bool ProcessMessage(char(&recvBuf)[512])
 		{
 			for (int i = 0; i < params.size(); i += 4)
 			{
-				gameGrid.MovePlayer(std::stoi(params[i]), std::stoi(params[i+1]), std::stoi(params[i+2]), params[i+3]);
+				if (gameGrid.MovePlayer(std::stoi(params[i]), std::stoi(params[i + 1]), std::stoi(params[i + 2]), params[i + 3]))
+				{
+					return true;	//Will update the entire grid
+				}
+				else
+				{
+					while (!gameGrid.needUpdates.empty())
+					{
+						gameGrid.DrawPoint(gameGrid.needUpdates.front().first, gameGrid.needUpdates.front().second);
+						gameGrid.needUpdates.pop();
+					}
+				}
 			}
 		}
-		//else
-			//Output error message not with cout
-
-		return true;
 	}
 	else if (msgType == "SETUP")
 	{
@@ -403,7 +415,7 @@ bool ProcessMessage(char(&recvBuf)[512])
 	return false; //if gotten to end do not redraw map
 }
 
-//populates the parameter vector with delimited parameters from msg string (TODO: add delimiter parameter)
+//Populates the parameter vector with delimited parameters from msg string (TODO: add delimiter parameter)
 void SplitParameters(vector<std::string> &parameters, std::string content)
 {
 	std::string curParameter = "";

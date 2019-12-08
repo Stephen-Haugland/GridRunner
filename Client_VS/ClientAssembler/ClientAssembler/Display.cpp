@@ -25,9 +25,6 @@ void Display::DrawGrid()
 	// Windows console
 	// https://www.dreamincode.net/forums/topic/228811-microsoft-using-console-functions-to-achieve-blinking-text/
 
-	//Clear the console
-	//Clear();
-
 	int curWidth = width;
 	int curHeight = height;
 	int curX = 0;
@@ -35,53 +32,45 @@ void Display::DrawGrid()
 	bool isDrawing = true;
 	while (isDrawing)
 	{
-		
-
-		//C++ goto function (x multiplied by two since our grid point is two space charecters
-		SetCursorPosition(curX * 2, curY);
-
-		//C++ set color functions
-		SetDrawColor(colorGrid[curY][curX].isRed(),
-					 colorGrid[curY][curX].isGreen(),
-					 colorGrid[curY][curX].isBlue(),
-					 colorGrid[curY][curX].isBright());
-
-		//C++ write text (a singular grid point)
-		std::cout << "  " << std::endl;
+		DrawPoint(curX, curY);
 
 		//Assembly for next grid point and isDrawing state
 		__asm
 		{
-			// check if at the end of the grid
+			// Check if at the end of the grid (positioned at width,height)
 			mov eax, curWidth
 			sub eax, 1
 			cmp eax, curX
-			jne nextGridPointCalc
+			jne nextGridPointCalc  //IF not at horizontal end go to next grid point
 
 			mov eax, curHeight
 			sub eax, 1
 			cmp eax, curY
-			jne nextGridPointCalc
+			jne nextGridPointCalc  //IF not at vertical end go to next grid point
 
-			//if at end set to stop drawing
+			//ELSE IF at end of grid set loop to stop drawing
 			mov isDrawing, 0
+			jmp endOfFunction
 
-			//check if at the end of row
+			//Check if at the end of row (nned to move down)
 			nextGridPointCalc:
 				mov eax, curWidth
 				sub eax, 1
 				cmp eax, curX
-				je endOfRowCalc
-				jmp nextCellCalc
+				je endOfRowCalc	//IF at end of row go down and to first horizontal cell
+				jmp nextCellCalc //ELSE go to the next horizontal cell	
 
-			//set x = 0 and add to increment if at end
+			//Go to the first cell of the next row
 			endOfRowCalc:
 				inc curY
 				mov curX, 0
+				jmp endOfFunction //Skip over going to next cell
 
-			//add to x if not at end
+			//Go to next horizontal
 			nextCellCalc:
 				inc curX
+
+			endOfFunction:
 		}
 
 		//Set color back to dark 
@@ -92,8 +81,17 @@ void Display::DrawGrid()
 
 void Display::DrawPoint(int curX, int curY)
 {
+	//C++ goto function (x multiplied by two since our grid point is two space charecters
+	SetCursorPosition(curX * 2, curY);
 
+	//Assembler set color function
+	SetDrawColor(colorGrid[curY][curX].isRed(),
+		colorGrid[curY][curX].isGreen(),
+		colorGrid[curY][curX].isBlue(),
+		colorGrid[curY][curX].isBright());
 
+	//C++ write text (a singular grid point)
+	std::cout << "  " << std::endl;
 }
 
 //[UTILITY DRAWING FUNCTIONS C++]
@@ -113,28 +111,28 @@ void Display::SetDrawColor(bool r, bool g, bool b, bool isBright)
 		//check if need to add red to the mix 
 		mov eax, DWORD PTR r
 		cmp eax, 1
-		jne addGreenCalc
+		jne addGreenCalc		//IF no need for red skip to green 
 		add finalOption, 64d
 
 		//check if need to add green to the mix 
 		addGreenCalc:
 			mov eax, DWORD PTR g
 			cmp eax, 1
-			jne addBlueCalc
+			jne addBlueCalc     //IF no need for green skip to blue
 			add finalOption, 32d
 			
 		//check if need to add blue to the mix 
 		addBlueCalc:
 			mov eax, DWORD PTR b
 			cmp eax, 1
-			jne addIntensityCalc
+			jne addIntensityCalc //IF no need for blue skip to intensity
 			add finalOption, 16d
 
 		//check if need to add intensity to the mix 
 		addIntensityCalc:
 			mov eax, DWORD PTR isBright
 			cmp eax, 1
-			jne endOfSelection
+			jne endOfSelection	 //IF no need for intensity skip to end of function
 			add finalOption, 128d
 
 		endOfSelection:
@@ -185,26 +183,30 @@ void Display::DestroyPlayerCells(int playerId)
 				colorGrid[y][x].setIsConquered(false);
 				colorGrid[y][x].setIsPlayerPos(false);
 				colorGrid[y][x].setOwnerId(-1);
+				needUpdates.push({x, y});				//Set the modified cell to update
 			}
 		}
 	}
 }
 
-void Display::MovePlayer(int id, int nextX, int nextY, std::string state)
+//TRUE to update entire grid, FALSE to only do specific cells queued
+bool Display::MovePlayer(int id, int nextX, int nextY, std::string state)
 {
 	//Check if state is one charecter long
 	if (state.length() > 1)
-		return; 
+		return false; 
 
-	//TODO: add more assembler
 	if (state == "M")
 	{
-		//TODO remove below when implemented territories
 		colorGrid[players[id].curY][players[id].curX].setIsPlayerPos(false);
+		needUpdates.push({ players[id].curX, players[id].curY });
+
 		players[id].curY = nextY;
 		players[id].curX = nextX;
+
 		colorGrid[nextY][nextX].setIsPlayerPos(true);
 		colorGrid[nextY][nextX].setOwnerId(id);
+		needUpdates.push({ players[id].curX, players[id].curY });
 	}
 	else if (state == "D")
 	{
@@ -214,6 +216,11 @@ void Display::MovePlayer(int id, int nextX, int nextY, std::string state)
 	{
 		//undefined state
 	}
+
+	if (needUpdates.empty())
+		return true;			//All of the grid will be updated
+	else
+		return false;
 }
 
 //[PLAYER EXISTANCE FUNCTIONS]
@@ -246,4 +253,13 @@ bool Display::RemovePlayer(int playerId)
 void Display::SetOurID(int ourId)
 {
 	this->ourId = ourId;
+}
+
+
+//[UTILITY]
+//https://stackoverflow.com/questions/709146/how-do-i-clear-the-stdqueue-efficiently
+void Display::ClearUpdateQueue()
+{
+	std::queue<std::pair<int,int>> empty;
+	std::swap(needUpdates, empty);
 }

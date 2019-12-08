@@ -1,10 +1,9 @@
-ClientAssembler.cpp
-C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(167,7): warning C4102:  'std': unreferenced label
-C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(261,23): warning C4244:  'initializing': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(340,22): warning C4018:  '<': signed/unsigned mismatch
-C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(368,22): warning C4018:  '<': signed/unsigned mismatch
+﻿  ClientAssembler.cpp
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(168,7): warning C4102: 'std': unreferenced label
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(258,23): warning C4244: 'initializing': conversion from 'unsigned int' to 'float', possible loss of data
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(337,22): warning C4018: '<': signed/unsigned mismatch
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(372,22): warning C4018: '<': signed/unsigned mismatch
   Display.cpp
   Generating Code...
-C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(410,20): warning C4018:  '<': signed/unsigned mismatch
-  ClientAssembler.vcxproj -> C:\Users\kmakrasnov21\Desktop\AssemblerFinal\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe
-
+D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\ClientAssembler\ClientAssembler.cpp(414,20): warning C4018: '<': signed/unsigned mismatch
+  ClientAssembler.vcxproj -> D:\Current_Projects\Assembler_Final\GridRunner\Client_VS\ClientAssembler\Debug\ClientAssembler.exe

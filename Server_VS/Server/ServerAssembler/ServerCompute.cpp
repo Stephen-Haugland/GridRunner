@@ -87,8 +87,6 @@ void ServerCompute::NextGridPosition(int playerDirection,
 			mov tempX, -1	//IF outside declare player dead
 			mov tempY, -1
 			jmp endOfFunc
-		
-		//... CHECK OTHER DIRECTIONS
 
 		notDown:			//Check if player moves left
 			cmp eax, 2
@@ -132,7 +130,7 @@ void ServerCompute::SetPlayerSpawnPoint(int playerId)
 	do
 	{
 		curX = rand() % width;
-		curY = rand() % height;
+		curY = 0;	//Always spawn on top (since default direction is down)
 
 	} while (isConflictingSpawnPoint(curX, curY, playerId));
 	players[playerId].ResetPlayer(curX, curY);
