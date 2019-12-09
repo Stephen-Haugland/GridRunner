@@ -340,7 +340,6 @@ bool ProcessMessage(char(&recvBuf)[512])
 
 	if(msgType == "MOVEP")
 	{
-		std::cout << "MOVEP" << msgContent << std::endl;
 		if (params.size() % 4 == 0)
 		{
 			for (int i = 0; i < params.size(); i += 4)
@@ -362,7 +361,6 @@ bool ProcessMessage(char(&recvBuf)[512])
 	}
 	else if (msgType == "SETUP")
 	{
-		std::cout << "SETUP" << msgContent << std::endl;
 		//FORMAT: id|x spawn of us|y spawn of us
 		gameGrid.SetOurID(std::stoi(params[0]));
 		gameGrid.AddPlayer(std::stoi(params[0]), std::stoi(params[1]), std::stoi(params[2]));
@@ -377,7 +375,6 @@ bool ProcessMessage(char(&recvBuf)[512])
 	}
 	else if (msgType == "OLDPL")
 	{
-		std::cout << "OLDPL" << msgContent << std::endl;
 		//FORMAT: id|x spawn of other #1|y spawn of other #1|x spawn of other #2|y spawn of other #2
 		if (params.size() % 3 == 0)
 		{
@@ -392,7 +389,6 @@ bool ProcessMessage(char(&recvBuf)[512])
 	}
 	else if(msgType == "DELPL")
 	{
-		std::cout << "DELPL" << msgContent << std::endl;
 		//FORMAT: id to delete | restart avaliable
 		int deleteID = std::stoi(params[0]);
 		int restartAvalible = std::stoi(params[1]);

@@ -231,7 +231,8 @@ bool Display::PlayerOnline(int id)
 
 void Display::AddPlayer(int playerId, int spawnX, int spawnY)
 {
-	SetupNewPlayer(playerId, spawnX, spawnY);
+	if(spawnX != -1 && spawnY != -1)
+		SetupNewPlayer(playerId, spawnX, spawnY);
 	players.insert({playerId, ClientPlayer(playerId, spawnX, spawnY) });
 }
 

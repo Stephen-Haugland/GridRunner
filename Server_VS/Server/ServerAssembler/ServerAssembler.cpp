@@ -334,7 +334,7 @@ void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)
 		}
 	}
 
-	//std::cout << "Success - Sent message top all: " << messageType << " - " << messageContent << std::endl;
+	std::cout << "Success - Sent message top all: " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512])
@@ -351,7 +351,7 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 		}
 	}
 
-	//std::cout << "Success - Sent message to all but " << std::to_string(ignoreID) << ": " << messageType << " - " << messageContent << std::endl;
+	std::cout << "Success - Sent message to all but " << std::to_string(ignoreID) << ": " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendPlayerStates(char(&sendBuf)[512])
