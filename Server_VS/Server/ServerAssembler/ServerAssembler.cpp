@@ -254,6 +254,7 @@ unsigned __stdcall StartClientThread(void* data)
 	SendAllExcept("NEWPL", compute.players[id].GetSetupString(), id, sendBuf);
 	//Send the spawn info to new player (defferent function for different setup)
 	SendOne(compute.players[id].clientSocket, "SETUP", compute.players[id].GetSetupString(), sendBuf);
+
 	//Send current positions of other players to new player
 	std::string allPositions = AllPositionsString(compute.players[id].clientID);
 	if(allPositions != "")
@@ -302,6 +303,11 @@ void SendOne(SOCKET socket, std::string messageType, std::string messageContent,
 			return;
 	}
 
+	if (messageType == "SETUP")
+	{
+		std::cout << messageType << " - " << messageContent << std::endl;
+	}
+
 	// Send over the message to sender
 	int iSendResult = send(socket, sendBuf, 512, 0);
 	if (iSendResult == SOCKET_ERROR)
@@ -328,7 +334,7 @@ void SendAll(std::string messageType, std::string messageContent, char(&sendBuf)
 		}
 	}
 
-	std::cout << "Success - Sent message top all: " << messageType << " - " << messageContent << std::endl;
+	//std::cout << "Success - Sent message top all: " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendAllExcept(std::string messageType, std::string messageContent, int ignoreID, char(&sendBuf)[512])
@@ -345,7 +351,7 @@ void SendAllExcept(std::string messageType, std::string messageContent, int igno
 		}
 	}
 
-	std::cout << "Success - Sent message to all but " << std::to_string(ignoreID) << ": " << messageType << " - " << messageContent << std::endl;
+	//std::cout << "Success - Sent message to all but " << std::to_string(ignoreID) << ": " << messageType << " - " << messageContent << std::endl;
 }
 
 void SendPlayerStates(char(&sendBuf)[512])
