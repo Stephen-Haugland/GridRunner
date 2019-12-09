@@ -55,6 +55,8 @@ void ServerCompute::MovePlayers()
 
 }
 
+
+
 void ServerCompute::NextGridPosition(int playerDirection, 
 									 int &curX, 
 									 int &curY, 
@@ -62,6 +64,7 @@ void ServerCompute::NextGridPosition(int playerDirection,
 									 int gridSizeY)
 {
 
+	// declare temporary local variable so inline assembly can access values
 	int tempX = curX;
 	int tempY = curY;
 	__asm
@@ -69,9 +72,9 @@ void ServerCompute::NextGridPosition(int playerDirection,
 		mov eax, playerDirection //stores direction in input register
 
 		cmp eax, 0			//Compares if player direction is up
-		jne notUp			//Checks next if not up		
+		jne notUp			//IF not going up check the next direction	
 		dec tempY			//If user presses W decrement Y position (Moves up 1 space)
-		cmp tempY, 0			//Checks if out of range of grid
+		cmp tempY, 0		//Checks if outside of grid
 		jae endOfFunc
 		mov tempX, -1		//If out of range, sets position to (-1,-1) (player dies)
 		mov tempY, -1
@@ -79,7 +82,7 @@ void ServerCompute::NextGridPosition(int playerDirection,
 
 		notUp:				//Check if player moves down
 			cmp eax, 1		//Compares if player direction is down
-			jne notDown		//IF not going down move to next direction
+			jne notDown		//IF not going down check the next direction
 			inc tempY		//IF going down increment y postion
 			mov ebx, gridSizeY	
 			cmp tempY, ebx	//Check if outside grid
@@ -89,25 +92,27 @@ void ServerCompute::NextGridPosition(int playerDirection,
 			jmp endOfFunc
 
 		notDown:			//Check if player moves left
-			cmp eax, 2
-			jne notLeft
-			dec tempX
-			cmp tempX, 0
+			cmp eax, 2		//Compares if player direction is left
+			jne notLeft		//IF not going left check the next direction
+			dec tempX		//IF going left decrement x postion
+			cmp tempX, 0	//Check if outside grid
 			jae endOfFunc
-			mov tempX, -1
+			mov tempX, -1	//IF outside declare player dead
 			mov tempY, -1
 			jmp endOfFunc
 
-		notLeft:			//Check if player moves right
-			inc tempX
+		notLeft:				//ELSE player is moving right
+			inc tempX			//IF going right increment x position
 			mov ebx, gridSizeX
-			cmp tempX, ebx
+			cmp tempX, ebx		//Check if outside grid
 			jb endOfFunc
-			mov tempX, -1
+			mov tempX, -1		//IF outside declare player dead
 			mov tempY, -1
 
 		endOfFunc:
 	}
+
+	// set passed in position equal to the new temporary values
 	curX = tempX;
 	curY = tempY;
 }
